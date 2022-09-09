@@ -19,11 +19,13 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-private:
-	UPROPERTY(EditAnywhere, Meta = (AllowPrivateAccess = true));
-	TSubclassOf<AActor> ActorToSpawn;
-
-public:
+public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+private:
+
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAcces = true))
+	TSubclassOf<AActor> ActorToSpawn;
+
 };

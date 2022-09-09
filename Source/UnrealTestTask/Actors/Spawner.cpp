@@ -1,3 +1,6 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#include <vector>
 #include "Spawner.h"
 
 // Sets default values
@@ -13,17 +16,43 @@ void ASpawner::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	FVector Location(2000, 0, 170);
-	FRotator Rotation(0);
+	UWorld *World = GetWorld();
 
-	GetWorld()->SpawnActor<AActor>(ActorToSpawn, Location, Rotation);
+	std::vector<FVector> Targets;
+	FRotator Rotation(0);
+	FVector Location, Spawn;
+	Location.Z = 50;
+	Spawn.Z = 50;
+
+	for (int i = 0; i < 15; i++)
+	{
+		bool ToClose;
+		do
+		{
+			Location.X = FMath::FRandRange(-2000, 2000);
+			Location.Y = FMath::FRandRange(-2000, 2000);
+			ToClose = false;
+			
+			for (int j = 0; j < Targets.size(); j++)
+			{
+				if (FVector::Dist(Targets[j], Location) < 80)
+				{
+					ToClose = true;
+				}
+			}
+
+		} while (FVector::Dist(Location, Spawn) > 2000 || ToClose);
+
+		World->SpawnActor<AActor>(ActorToSpawn, Location, Rotation);
+		Targets.push_back(Location);
+	}
 
 }
 
 // Called every frame
 void ASpawner::Tick(float DeltaTime)
 {
-
 	Super::Tick(DeltaTime);
 
 }
+

@@ -15,3 +15,4 @@ AUnrealTestTaskGameMode::AUnrealTestTaskGameMode()
 	// use our custom HUD class
 	HUDClass = AUnrealTestTaskHUD::StaticClass();
 }
+

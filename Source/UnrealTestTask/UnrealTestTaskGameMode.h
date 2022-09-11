@@ -13,6 +13,8 @@ class AUnrealTestTaskGameMode : public AGameModeBase
 
 public:
 	AUnrealTestTaskGameMode();
+
+
 };
 
 

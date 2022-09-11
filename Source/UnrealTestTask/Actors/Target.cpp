@@ -15,8 +15,17 @@ ATarget::ATarget()
 	MyComp->BodyInstance.SetCollisionProfileName("BlockAllDynamic");
 	MyComp->OnComponentHit.AddDynamic(this, &ATarget::OnCompHit);
 
+	MyComp->InitSphereRadius(50);
+
 	RootComponent = MyComp;
 
+	Sphere = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SphereMesh"));
+	Sphere->AttachTo(RootComponent);
+	Sphere->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
+	Sphere->SetNotifyRigidBodyCollision(true);
+
+	Sphere->BodyInstance.SetCollisionProfileName("BlockAllDynamic");
+	Sphere->OnComponentHit.AddDynamic(this, &ATarget::OnCompHit);
 }
 
 // Called when the game starts or when spawned
@@ -39,4 +48,9 @@ void ATarget::OnCompHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 	{
 		Destroy();
 	}
+}
+
+void ATarget::Destroyed()
+{
+	GetWorld()->SpawnActor<AActor>(DestroyedTarget, GetActorLocation(), GetActorRotation());
 }

@@ -1,4 +1,5 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// This class describes spheres that will be spawned and destroyed
+//
 
 #pragma once
 
@@ -30,14 +31,17 @@ public:
 
 private:
 	UPROPERTY(VisibleAnywhere)
-	USphereComponent* MyComp;
-
-	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* Sphere;
 
+	//Will store destroyed target blueprint actor
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AActor> DestroyedTarget;
 
+	//Will store projectile blueprint to ensure that target only gets destroyed on collision with projectiles
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AActor> Projectile;
+
+	float SphereRadius;
 
 	UFUNCTION()
 	void OnCompHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);

@@ -1,62 +1,100 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "Spawner.h"
+#include "MyGameStateBase.h"
 #include "Engine/GameEngine.h"
 
 // Sets default values
 ASpawner::ASpawner()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
-	Targets.reserve(15);
 }
 
+// Destroys current wave and spawns a new one
+void ASpawner::RespawnWave()
+{
+	DestroyWave();
+	SpawnNewWave();
+}
+
+// Destroyes all surviving spheres and empties array
 void ASpawner::DestroyWave()
 {
-	for (int i = 0; i < Targets.size(); i++)
+	for (int i = 0; i < Targets.Num(); i++)
 	{
 		if (IsValid(Targets[i]))
 		{
 			Targets[i]->Destroy();
 		}
 	}
-	Targets.clear();
+	Targets.Empty();
 }
 
+//Spawns new wave
 void ASpawner::SpawnNewWave()
 {
 	UWorld* World = GetWorld();
+	AMyGameStateBase* GameState = World->GetGameState<AMyGameStateBase>();
+	float KillZone = GameState->KillRadius;
+	float SpawnZone = GameState->SpawnRadius;
+	int SphereNumber = GameState->SphereNumber;
+	float Distance = GameState->DistanceBetweenSpheres;
+	int SphereInKillZoneNumber = GameState->SpheresDestroyedToCompleteWave;
+	float SphereRadius = GameState->SphereRadius;
 
 	FRotator Rotation(0);
-	FVector Location, Spawn;
+	FVector Location, Spawn(0, 0, 100);
 	Location.Z = 100;
-	Spawn.Z = 100;
+	int num = 0;
 
-	std::vector<FVector> TargetsLocation(15);
-
-	for (int i = 0; i < 15; i++)
+	//Guaranty that waves are complitable
+	while (num < SphereInKillZoneNumber)
 	{
-		bool ToClose;
-		do
+		Location.X = FMath::FRandRange(SpawnZone * -1, SpawnZone);
+		Location.Y = FMath::FRandRange(SpawnZone * -1, SpawnZone);
+		//Checking if a sphere has spawned too close to otherSpheres
+		bool ToClose = false;
+		for (int j = 0; j < Targets.Num(); j++)
 		{
-			Location.X = FMath::FRandRange(-2000, 2000);
-			Location.Y = FMath::FRandRange(-2000, 2000);
-			ToClose = false;
-
-			for (int j = 0; j < TargetsLocation.size(); j++)
+			float GetDistance = FVector::Distance(Targets[j]->GetActorLocation(), Location);
+			if (GetDistance <= Distance + SphereRadius * 2)
 			{
-				if (FVector::Dist(TargetsLocation[j], Location) < 80)
-				{
-					ToClose = true;
-					break;
-				}
+				ToClose = true;
 			}
+		}
 
-		} while (FVector::Dist(Location, Spawn) > 2000 || ToClose);
+		if (FVector::Distance(Location, Spawn) <= SpawnZone)
+		{
+			if (!ToClose)
+			{
+				Targets.Emplace(World->SpawnActor<AActor>(TargetSpawn, Location, Rotation));
+				num++;
+			}
+		}
+	}
 
-		Targets.push_back(World->SpawnActor<AActor>(TargetSpawn, Location, Rotation));
-		TargetsLocation.push_back(Location);
+	//Spawns rest of spheres
+	while (num < SphereNumber)
+	{
+		Location.X = FMath::FRandRange(KillZone * -1, KillZone);
+		Location.Y = FMath::FRandRange(KillZone * -1, KillZone);
+		//Checking if a sphere has spawned too close to otherSpheres
+		bool ToClose = false;
+		for (int j = 0; j < Targets.Num(); j++)
+		{
+			float GetDistance = FVector::Distance(Targets[j]->GetActorLocation(), Location);
+			if (GetDistance <= Distance + SphereRadius * 2)
+			{
+				ToClose = true;
+			}
+		}
+
+		if (FVector::Distance(Location, Spawn) <= KillZone)
+		{
+			if (!ToClose)
+			{
+				Targets.Emplace(World->SpawnActor<AActor>(TargetSpawn, Location, Rotation));
+				num++;
+			}
+		}
 	}
 }
 
@@ -68,28 +106,24 @@ void ASpawner::BeginPlay()
 	SpawnNewWave();
 }
 
-// Called every frame
+// Called every frame. Checkes how much spheres were destroyed in killzone and
+// if enough are destroyed updeates parameters and respawns wave
 void ASpawner::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if (FindTargetsDestroyedAmount() >= 10)
+	AMyGameStateBase* GameState = GetWorld()->GetGameState<AMyGameStateBase>();
+	if (GameState->SpheresDestroyedInKillZone >= GameState->SpheresDestroyedToCompleteWave)
 	{
-		DestroyWave();
-		SpawnNewWave();
-	}
-}
-
-int ASpawner::FindTargetsDestroyedAmount()
-{
-	int num = 0;
-
-	for (int i = 0; i < Targets.size(); i++)
-	{
-		if (!IsValid(Targets[i]))
+		GameState->SpheresDestroyedInKillZone = 0;
+		GameState->WavesClearedNumber++;
+		GameState->SphereNumber = GameState->SphereNumber + (int)round(GameState->SphereNumber * GameState->SphereNumberIncrease);
+		GameState->SpawnRadius = GameState->SpawnRadius + (int)round(GameState->SpawnRadius * GameState->SpawnRadiusIncrease);
+		GameState->SphereRadius = GameState->SphereRadius - (int)round(GameState->SphereRadius * GameState->SphereRadiusDecrease);
+		if (GameState->SphereRadius < GameState->SphereMinimalRadius)
 		{
-			num++;
+			GameState->SphereRadius = GameState->SphereMinimalRadius;
 		}
-	}
 
-	return num;
+		RespawnWave();
+	}
 }

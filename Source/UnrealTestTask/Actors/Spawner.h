@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// This actor will spawn and destroy waves, as well as update parameters after waves are cleared
 
 #pragma once
 
@@ -15,6 +15,9 @@ class UNREALTESTTASK_API ASpawner : public AActor
 public:	
 	// Sets default values for this actor's properties
 	ASpawner();
+
+	UFUNCTION(BlueprintCallable)
+	void RespawnWave();
 
 	void DestroyWave();
 
@@ -35,5 +38,5 @@ private:
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAcces = true))
 	TSubclassOf<AActor> TargetSpawn;
 
-	std::vector<AActor*> Targets;
+	TArray<AActor*> Targets;
 };

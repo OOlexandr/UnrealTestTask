@@ -1,38 +1,30 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Target.h"
+#include <typeinfo>
+#include "Math/Vector.h"
+#include "MyGameStateBase.h"
 
 // Sets default values
 ATarget::ATarget()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	MyComp = CreateDefaultSubobject<USphereComponent>(TEXT("HitSphere"));
-	MyComp->SetNotifyRigidBodyCollision(true);
-
-	MyComp->BodyInstance.SetCollisionProfileName("BlockAllDynamic");
-	MyComp->OnComponentHit.AddDynamic(this, &ATarget::OnCompHit);
-
-	MyComp->InitSphereRadius(50);
-
-	RootComponent = MyComp;
-
 	Sphere = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SphereMesh"));
-	Sphere->AttachTo(RootComponent);
 	Sphere->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
 	Sphere->SetNotifyRigidBodyCollision(true);
 
 	Sphere->BodyInstance.SetCollisionProfileName("BlockAllDynamic");
 	Sphere->OnComponentHit.AddDynamic(this, &ATarget::OnCompHit);
+
+	RootComponent = Sphere;
 }
 
 // Called when the game starts or when spawned
 void ATarget::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	SphereRadius = GetWorld()->GetGameState<AMyGameStateBase>()->SphereRadius;
+	Sphere->SetRelativeScale3D(FVector(SphereRadius / 50.0f));
 }
 
 // Called every frame
@@ -42,15 +34,27 @@ void ATarget::Tick(float DeltaTime)
 
 }
 
+// On hit updates score and destroyes the target
 void ATarget::OnCompHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
 	{
+		AMyGameStateBase* GameState = GetWorld()->GetGameState<AMyGameStateBase>();
+		GameState->SpheresDestroyedNumber++;
+		if (FVector::Dist(FVector(0, 0, 100), GetActorLocation()) < GameState->KillRadius)
+		{
+			GameState->SpheresDestroyedInKillZone++;
+		}
 		Destroy();
 	}
 }
 
+// Spawns at actor location actor with destructible mesh, aka "destruction animation"
 void ATarget::Destroyed()
 {
-	GetWorld()->SpawnActor<AActor>(DestroyedTarget, GetActorLocation(), GetActorRotation());
+	if (!GetWorld()->GetGameState<AMyGameStateBase>()->OnReset)
+	{
+		AActor* Debris = GetWorld()->SpawnActor<AActor>(DestroyedTarget, GetActorLocation(), GetActorRotation());
+		Debris->SetActorScale3D(FVector(SphereRadius / 50.0f));
+	}
 }

@@ -33,8 +33,6 @@ public:
 
 private:
 
-	int FindTargetsDestroyedAmount();
-
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAcces = true))
 	TSubclassOf<AActor> TargetSpawn;
 

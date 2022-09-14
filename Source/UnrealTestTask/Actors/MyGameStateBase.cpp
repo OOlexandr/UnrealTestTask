@@ -128,8 +128,3 @@ void AMyGameStateBase::SetSpheresDestroyedToCompleteWave(FText fSpheresDestroyed
 {
 	SpheresDestroyedToCompleteWave = FCString::Atoi(*fSpheresDestroyedToCompleteWave.ToString());
 }
-
-void AMyGameStateBase::SetOnReset(bool bOnReset)
-{
-	OnReset = bOnReset;
-}

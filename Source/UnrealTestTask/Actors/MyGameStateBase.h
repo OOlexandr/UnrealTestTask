@@ -42,8 +42,6 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void Reset();
-	//ATarget will use this parameter to not create destroyed targets on reset
-	bool OnReset = false;
 
 	UFUNCTION(BlueprintCallable)
 	FString GetStartSpawnRadius();
@@ -95,7 +93,4 @@ public:
 	void SetSphereNumberIncrease(FText SphereNumberIncrease);
 	UFUNCTION(BlueprintCallable)
 	void SetSpheresDestroyedToCompleteWave(FText SphereDestroyedToCompleteWave);
-
-	UFUNCTION(BlueprintCallable)
-	void SetOnReset(bool OnReset);
 };

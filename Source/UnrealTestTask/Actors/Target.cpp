@@ -18,6 +18,13 @@ ATarget::ATarget()
 	RootComponent = Sphere;
 }
 
+// Spawns at actor location actor with destructible mesh, aka "destruction animation"
+void ATarget::Destroyed()
+{
+	AActor* Debris = GetWorld()->SpawnActor<AActor>(DestroyedTarget, GetActorLocation(), GetActorRotation());
+	Debris->SetActorScale3D(FVector(SphereRadius / 50.0f));
+}
+
 // Called when the game starts or when spawned
 void ATarget::BeginPlay()
 {
@@ -49,12 +56,3 @@ void ATarget::OnCompHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 	}
 }
 
-// Spawns at actor location actor with destructible mesh, aka "destruction animation"
-void ATarget::Destroyed()
-{
-	if (!GetWorld()->GetGameState<AMyGameStateBase>()->OnReset)
-	{
-		AActor* Debris = GetWorld()->SpawnActor<AActor>(DestroyedTarget, GetActorLocation(), GetActorRotation());
-		Debris->SetActorScale3D(FVector(SphereRadius / 50.0f));
-	}
-}
